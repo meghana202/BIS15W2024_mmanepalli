@@ -4,3 +4,7 @@ Hi! This repository will keep track of work I have done for BIS15L - Data Scienc
 
 ## Contact Me
 [Meghana Manepalli](mmanepalli@ucdavis.edu)
+
+### What is currently up
+1. Lab 1 and HW 1 - 1/11
+2. 
