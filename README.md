@@ -8,3 +8,4 @@ Hi! This repository will keep track of work I have done for BIS15L - Data Scienc
 ### What is currently up
 1. Lab 1 and HW 1 - 1/11
 2. Lab 2 and HW 2 - 1/16
+3. Lab 3 and HW 3 - 1/18
