@@ -79,27 +79,37 @@ table(vore$trophic.guild)
 There are 342 species of carnivores and 227 species of herbivores. 
 **7. Make two new data frames, one which is restricted to carnivores and another that is restricted to herbivores.**  
 ```{r}
-
+carnivores <- filter(homerange, trophic.guild=="carnivore")
 ```
+
+```{r}
+herbivores <- filter(homerange, trophic.guild=="herbivore")
+```
+
 
 **8. Do herbivores or carnivores have, on average, a larger `mean.hra.m2`? Remove any NAs from the data.**  
 ```{r}
-
+mean(carnivores$mean.hra.m2, rm.na=T)
 ```
 
 ```{r}
-
+mean(herbivores$mean.hra.m2, rm.na=T)
 ```
+Herbivores haev a larger mean.hra.m2.
 
 **9. Make a new dataframe `owls` that is limited to the mean mass, log10 mass, family, genus, and species of owls in the database. Which is the smallest owl? What is its common name? Do a little bit of searching online to see what you can learn about this species and provide a link below** 
 ```{r}
-
+owls_df <- select(filter(homerange, order=="strigiformes"), mean.mass.g, log10.preymass, family, genus, species)
+owls_df
 ```
-
+The smallest owl appears to be the Glaucidium passerinum, the Eurasian pygmy owl. It is a small reddish-brown owl with spots. 
+https://en.wikipedia.org/wiki/Eurasian_pygmy_owl
 **10. As measured by the data, which bird species has the largest homerange? Show all of your work, please. Look this species up online and tell me about it!**.  
 ```{r}
-
+homerange
+birds <- filter(homerange, class=="aves")
+#View(birds)
 ```
-
+I viewed the birds and sorted the log10 and meanhra by highest to lowest, showing that the crested caracara (caracara cheriway) is the bird with the largest range.They can live up to 25 years in the wild.
 ## Push your final code to GitHub!
 Please be sure that you check the `keep md` file in the knit preferences.   
