@@ -11,3 +11,7 @@ Hi! This repository will keep track of work I have done for BIS15L - Data Scienc
 3. Lab 3 and HW 3 - 1/18
 4. Lab 4 and HW 4 (1-6) - 1/23
 5. Lab 5 and Completed HW 4 - 1/25
+6. Lab 6 and completed HW 5 - 1/20?
+7. Lab 7 and incomplete HW - 2/1
+
+
