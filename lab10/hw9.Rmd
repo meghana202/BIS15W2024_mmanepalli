@@ -3,9 +3,9 @@ title: "Homework 9"
 author: "Meghana Manepalli"
 date: "`r Sys.Date()`"
 output:
-  html_document:
+  html_document: 
     theme: spacelab
-    toc: no
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
@@ -27,7 +27,7 @@ library(naniar)
 
 For this homework, we will take a departure from biological data and use data about California colleges. These data are a subset of the national college scorecard (https://collegescorecard.ed.gov/data/). Load the `ca_college_data.csv` as a new object called `colleges`.
 ```{r}
-
+colleges <- read_csv("data/ca_college_data.csv")
 ```
 
 The variables are a bit hard to decipher, here is a key:  
@@ -45,17 +45,82 @@ PFTFTUG1_EF: Percentage of undergraduate students who are first-time, full-time 
 
 1. Use your preferred function(s) to have a look at the data and get an idea of its structure. Make sure you summarize NA's and determine whether or not the data are tidy. You may also consider dealing with any naming issues.
 
+```{r}
+summary(colleges)
+```
+
+```{r}
+glimpse(colleges)
+```
+
+
 2. Which cities in California have the highest number of colleges?
+
+```{r}
+colleges %>% 
+  group_by(CITY) %>% 
+  summarise(num_colleges = n()) %>% 
+  arrange(desc(num_colleges)) 
+```
+Los Angeles, San Diego, San Francisco, and Sacramento are some top cities for number of colleges in California.
 
 3. Based on your answer to #2, make a plot that shows the number of colleges in the top 10 cities.
 
+```{r}
+?geom_bar
+colleges %>% 
+  group_by(CITY) %>% 
+  summarise(num_colleges = n()) %>% 
+  arrange(desc(num_colleges)) %>% 
+  head(10) %>% 
+  ggplot(aes(x = reorder(CITY, num_colleges), y = num_colleges)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "City", y = "Number of Colleges", title = "Top 10 Cities by Number of Colleges") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
 4. The column `COSTT4_A` is the annual cost of each institution. Which city has the highest average cost? Where is it located?
+
+```{r}
+colleges %>% 
+  group_by(CITY) %>% 
+  summarise(avg_cost = mean(COSTT4_A, na.rm = TRUE)) %>% 
+  arrange(desc(avg_cost)) 
+```
+Claremont has the highest average score.
 
 5. Based on your answer to #4, make a plot that compares the cost of the individual colleges in the most expensive city. Bonus! Add UC Davis here to see how it compares :>).
 
-6. The column `ADM_RATE` is the admissions rate by college and `C150_4_POOLED` is the four-year completion rate. Use a scatterplot to show the relationship between these two variables. What do you think this means?
+```{r}
+?theme
+colleges %>% 
+  filter(CITY == "Claremont" | INSTNM == "University of California-Davis") %>% 
+  ggplot(aes(x = reorder(INSTNM, COSTT4_A), y = COSTT4_A, fill = INSTNM)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Institution", y = "Annual Cost", title = "Comparison of Annual Cost in Claremont") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
+
+6. The column `ADM_RATE` is the admissions rate by college and `C150_4_POOLED` is the four-year completion rate. Use a scatterplot to show the relationship between these two variables. What do you think this means?
+```{r}
+colleges %>% 
+  ggplot(aes(x = ADM_RATE, y = C150_4_POOLED)) +
+  geom_point() +
+  labs(x = "Admissions Rate", y = "Four-Year Completion Rate", title = "Relationship between Admissions Rate and Four-Year Completion Rate")
+
+```
+It looks like admissions rate and 4 year completion rate are negatively correlated. 
 7. Is there a relationship between cost and four-year completion rate? (You don't need to do the stats, just produce a plot). What do you think this means?
+
+```{r}
+colleges %>% 
+  ggplot(aes(x = COSTT4_A, y = C150_4_POOLED)) +
+  geom_point() +
+  labs(x = "Annual Cost", y = "Four-Year Completion Rate", title = "Relationship between Cost and Four-Year Completion Rate")
+```
+It looks like cost and completion rate are positively correlated. 
 
 8. The column titled `INSTNM` is the institution name. We are only interested in the University of California colleges. Make a new data frame that is restricted to UC institutions. You can remove `Hastings College of Law` and `UC San Francisco` as we are only interested in undergraduate institutions.
 
@@ -63,8 +128,47 @@ Remove `Hastings College of Law` and `UC San Francisco` and store the final data
 
 Use `separate()` to separate institution name into two new columns "UNIV" and "CAMPUS".
 
+```{r}
+univ_calif_final <- colleges %>% 
+  filter(grepl("University of California", INSTNM)) %>% 
+  filter(!grepl("Hastings College of Law|UC San Francisco", INSTNM)) %>% 
+  separate(INSTNM, into = c("UNIV", "CAMPUS"), sep = "-")
+
+summary(univ_calif_final$ADM_RATE)
+univ_calif_final %>% 
+  ggplot(aes(x = reorder(CAMPUS, ADM_RATE), y = ADM_RATE)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Campus", y = "Admissions Rate", title = "Admissions Rate of UC Campuses") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
 9. The column `ADM_RATE` is the admissions rate by campus. Which UC has the lowest and highest admissions rates? Produce a numerical summary and an appropriate plot.
 
+As you can see above, the highest admissions rate is UC Riverside and lowest is UC Berkeley.
+
+
 10. If you wanted to get a degree in biological or biomedical sciences, which campus confers the majority of these degrees? Produce a numerical summary and an appropriate plot.
+
+```{r}
+bio_degrees <- univ_calif_final %>% 
+  filter(PCIP26 > 0)
+```
+
+
+```{r}
+bio_degrees_summary <- bio_degrees %>% 
+  group_by(CAMPUS) %>% 
+  summarise(avg_bio_degrees = mean(PCIP26))
+```
+
+
+```{r}
+ggplot(bio_degrees_summary, aes(x = reorder(CAMPUS, avg_bio_degrees), y = avg_bio_degrees)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Campus", y = "Average Percentage of Bio/Biomedical Degrees", title = "Distribution of Bio/Biomedical Degrees by UC Campuses") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+The majority of biological or biomedical science degrees are conferred by UC San Diego.
 
 ## Knit Your Output and Post to [GitHub](https://github.com/FRS417-DataScienceBiologists)
