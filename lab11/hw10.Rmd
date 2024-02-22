@@ -33,7 +33,7 @@ deserts <- read_csv("data/surveys_complete.csv") %>% clean_names()
 1. Use the function(s) of your choice to get an idea of its structure, including how NA's are treated. Are the data tidy?  
 
 ```{r}
-
+glimpse(deserts)
 ```
 
 2. How many genera and species are represented in the data? What are the total number of observations? Which species is most/ least frequently sampled in the study?
