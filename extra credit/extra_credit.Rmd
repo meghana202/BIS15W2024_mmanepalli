@@ -1,0 +1,200 @@
+---
+title: "Extra Credit W24"
+author: "Meghana Manepalli"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Instructions
+Answer the following questions and complete the exercises in RMarkdown. Please embed all of your code and push your final work to your repository. Your code must be organized, clean, and run free from errors. Remember, you must remove the `#` for any included code chunks to run. Be sure to add your name to the author header above. 
+
+Your code must knit in order to be considered. If you are stuck and cannot answer a question, then comment out your code and knit the document.  
+
+Don't forget to answer any questions that are asked in the prompt. Some questions will require a plot, but others do not- make sure to read each question carefully.  
+
+For the questions that require a plot, make sure to have clearly labeled axes and a title. Keep your plots clean and professional-looking, but you are free to add color and other aesthetics.  
+
+Be sure to follow the directions and push your code to your repository.
+
+## Background
+In the `data` folder, you will find data about global shark attacks. The data are updated continuously, and are taken from [opendatasoft](https://public.opendatasoft.com/explore/dataset/global-shark-attack/table/?flg=en-us&disjunctive.country&disjunctive.area&disjunctive.activity).  
+
+## Load the libraries
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("janitor")
+library("naniar")
+```
+
+## Load the data
+Run the following code chunk to import the data.
+```{r message=FALSE, warning=FALSE}
+global_sharks <- read_csv("data/global-shark-attack.csv") %>% clean_names()
+```
+
+## Questions
+1. (2 points) Start by doing some data exploration using your preferred function(s). What is the structure of the data? Where are the missing values and how are they represented?  
+The data has time, location, activity, info about the shark and victim. Missing values are represented as NAs in various columns.
+
+```{r}
+summary(global_sharks)
+```
+
+```{r}
+glimpse(global_sharks)
+```
+
+2. (3 points) Are there any "hotspots" for shark incidents? Make a plot that shows the total number of incidents for the top 10 countries? Which country has the highest number of incidents?
+
+```{r}
+global_sharks %>% 
+  group_by(country) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(n)) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(country, n), y=n, fill=country))+
+  geom_col()+
+  theme(legend.position="none", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Incidents by Country", x="Country", y="Count")
+```
+USA, Australia, and South Africa appear to be hotspots for incidents. 
+
+3. (3 points) Are there months of the year when incidents are more likely to occur? Make a plot that shows the total number of incidents by month. Which month has the highest number of incidents?
+
+```{r}
+global_sharks %>% 
+  mutate(month = format(date, "%m")) %>% 
+  group_by(month) %>% 
+  filter(!is.na(month)) %>% 
+  summarize(n=n()) %>% 
+  ggplot(aes(x=month, y=n, fill=month))+
+  geom_col()+
+  theme(legend.position="none", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Incidents by Month", x="Month", y="Count")
+```
+Most occur in January or July, peak summer in the northern and southern hemispheres. Highest is January. 
+
+4. (3 points) Which activity is associated with the highest number of incidents? Make a plot that compares the top 5 riskiest activities. "NA" should not be classified as an activity.
+
+```{r}
+global_sharks %>% 
+  group_by(activity) %>% 
+  filter(!is.na(activity)) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(n)) %>% 
+  head(5) %>% 
+  ggplot(aes(x=reorder(activity, n), y=n, fill=activity))+
+  geom_col()+
+  theme(legend.position="none", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Incidents by Activty", x="Activity", y="Count")
+
+```
+
+Surfing appears to be the activity with the most incidents.
+
+5. (3 points) The data include information on who was attacked. Make a plot that shows the total number of fatalities by sex- are males or females more likely to be killed by sharks?
+
+```{r}
+global_sharks %>% 
+  filter(fatal_y_n=="Y") %>% 
+  group_by(sex) %>% 
+  filter(!is.na(sex)) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(n)) %>% 
+  head(2) %>% 
+  ggplot(aes(x=sex, y=n, fill=sex))+
+  geom_col()+
+  theme(legend.position="none", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Fatalities by Sex", x="Sex", y="Count")
+```
+Males are more likely to be killed by sharks.
+
+6. (3 points) Make a plot that shows the range of age for the individuals that are attacked. Make sure to restrict sex to M or F (some of the codes used are not clear). You will also need to find a way to manage the messy age column.
+
+```{r}
+global_sharks %>% 
+  filter(sex=="M" | sex=="F") %>%
+  filter(!is.na(age)) %>% 
+  ggplot(aes(x=as.numeric(age), y=sex, fill=sex)) + 
+  geom_boxplot()+
+    theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Age by Sex", x="Age", y="Sex")
+```
+
+
+7. (3 points) In the United States, what are the top 5 states where shark attacks have been recorded since 1950? Make a plot that compares the number of incidents for these 5 states.
+
+```{r}
+global_sharks %>% 
+  filter(year(date) >= 1950) %>% 
+  filter(country == "USA") %>% 
+  group_by(area) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(n)) %>% 
+  head(5) %>% 
+  ggplot(aes(x=reorder(area, n), y=n, fill=area))+
+  geom_col()+
+  theme(legend.position="none", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Attacks by State since 1950", x="Sex", y="Count")
+```
+They are Ca, Fl, HI, NC, and SC.
+
+
+8. (3 points) Make a new object that limits the data to only include attacks attributed to Great White Sharks. This is trickier than it sounds, you should end up with 494 observations. Look online and adapt code involving `str_detect`. Which country has the highest number of Great White Shark attacks?
+
+
+```{r}
+great_whites <- global_sharks %>% filter((str_detect(species, "White ") | str_detect(species,"white "))) 
+
+great_whites %>% 
+  group_by(country) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(n)) %>% 
+  head(1)
+```
+The US has the highest number of great white attacks.
+
+9. (4 points) Use faceting to compare the number of fatal and non-fatal attacks for the top 5 countries with the highest number of Great White Shark attacks.
+
+```{r}
+top_countries <- great_whites %>% 
+  filter(country == "USA" | country=="AUSTRALIA"|country=="SOUTH AFRICA"|country=="NEW ZEALAND"|country=="PAPUA NEW GUINEA") %>% 
+  select(country, fatal_y_n)
+
+top_countries %>% 
+  group_by(country, fatal_y_n) %>% 
+  summarize(n=n(), .groups='keep') %>% 
+  filter(fatal_y_n != "UNKNOWN") %>% 
+  ggplot(aes(x=reorder(fatal_y_n, n), y=n, fill=fatal_y_n))+
+  geom_col() +
+  facet_wrap(~country) +
+  theme(legend.position="none", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Fatalities by Country for Top 5", x="Country", y="Count")
+```
+
+
+10. (3 points) Using the `global_sharks` data, what is one question that you are interested in exploring? Write the question and answer it using a plot or table. 
+What are the number of incidents by month for each of the top 5 countries?
+
+```{r}
+top_5_months  <- great_whites %>% 
+  filter(country == "USA" | country=="AUSTRALIA"|country=="SOUTH AFRICA"|country=="NEW ZEALAND") %>% 
+  mutate(month = format(date, "%m")) %>% 
+  select(country, month)
+```
+
+
+```{r}
+top_5_months %>% 
+  group_by(country, month) %>% 
+  summarize(n=n(), .groups='keep') %>% 
+  filter(!is.na(month)) %>% 
+  ggplot(aes(x=month, y=n, fill=month))+
+  geom_col() +
+  facet_wrap(~country) +
+  theme(legend.position="right", axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Incidents by country for each month", x="Country", y="Count")
+```
+I removed Papua New Guinea due to insufficient data. We can see that in the Southern Hemisphere, incidents are common in January and December. In the USA, they are more common in July, August, and September, our Summer/Fall months.
